@@ -59,6 +59,25 @@ export interface Region {
   }
 }
 
+export interface Frame { date: string; src: string }
+export interface View { src: string; bbox: [number, number, number, number]; label: string }
+
+export interface RegionImagery {
+  focus: { lat: number; lon: number; place: string }
+  frames: Frame[]
+  ndvi: [string, number | null][]
+  ndviLastYear: [string, number | null][]
+  views: Partial<Record<'orbit' | 'region' | 'district' | 'districtNdvi' | 'field', View>>
+}
+
+export interface ImageryFile {
+  generated: string
+  dates: string[]
+  world: Frame[]
+  regions: Record<string, RegionImagery>
+  sources: { modis: string; s2: string }
+}
+
 export interface RegionFile {
   generated: string
   weatherEnd: string

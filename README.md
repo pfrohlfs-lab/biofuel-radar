@@ -4,21 +4,22 @@ Research demo: **what is a satellite signal worth in global biofuel feedstock ma
 
 A single-page dashboard that follows the chain *field → harvest → feedstock supply → prices & spreads → trading signal* for FAME, HVO, SAF and ethanol, with an uncertainty band at every step.
 
-## Sections
-1. **Feedstock radar** — ten growing regions on a dot-matrix world map; real MODIS NDVI satellite images (this year vs. last year), 90-day rainfall and temperature anomalies, and an illustrative yield assumption.
-2. **Prices & spreads** — real monthly vegetable-oil, grain, sugar, crude and diesel prices; feedstock-vs-diesel spreads; HVO/SAF/ethanol as clearly labelled example series.
-3. **Policy & demand** — mandates 2025–2035 (ReFuelEU, FuelEU, RED III, THG-Quote, UK SAF, RFS, 45Z, Brazil, Indonesia, India, IMO).
-4. **Signal & credibility** — scenario sliders from weather anomaly to feedstock cost, and the research question: expected P&L vs. signal skill, and the cost of over-trusting a signal.
-5. **Data & method** — every number carries a status: *real data*, *example data*, *model* or *to verify*.
+## Terminal
+- **Markets watchlist** — fuels (HVO, SAF, FAME, ethanol, diesel, Brent) and feedstocks (palm, soybean, rapeseed oil, UCO, corn, sugar), plus a regions tab and live satellite alerts.
+- **Instrument view** — price chart vs. diesel, 3M/1Y change, 12M range, volatility, linked supply regions.
+- **Global vegetation map** — 12 monthly MODIS NDVI frames as a time-lapse, supply regions highlighted for the selected product.
+- **Satellite intelligence** — zoom from orbit → region → district → single field (MODIS 250 m to Sentinel-2 10 m), 'fly in' animation, NDVI time-lapse, NDVI/Sentinel overlay, mean NDVI vs. last year decoded from the satellite frames, weather anomalies and a yield signal.
+- **Analysis tabs** — signal & credibility (scenario chain, value of a trusted signal), spreads, policy & demand (11 mandates), data & method.
 
 ## Data
 | Layer | Source | Status |
 |---|---|---|
 | Vegetation (NDVI) | NASA GIBS, MODIS Terra 8-day | real |
+| Field imagery | Sentinel-2 cloudless 2023 by EOX (CC BY-NC-SA 4.0) | real |
 | Weather | Open-Meteo historical API (ERA5) | real |
 | Feedstock & crude prices | World Bank Pink Sheet (monthly) | real |
 | Diesel | U.S. EIA, NY Harbor ULSD (monthly) | real |
-| HVO, SAF, ethanol | simulated — real assessments are paywalled | example |
+| HVO, SAF, FAME, ethanol, UCO | simulated — real assessments are paywalled | example |
 | Yield / supply / price links | transparent illustrative model | model |
 
 No API keys needed. Not investment advice.
@@ -26,7 +27,8 @@ No API keys needed. Not investment advice.
 ## Run
 ```bash
 npm install
-python3 scripts/fetch_data.py   # refresh data into public/data and public/ndvi (needs openpyxl)
+python3 scripts/fetch_data.py      # prices + weather (needs openpyxl)
+python3 scripts/fetch_imagery.py   # satellite frames and field views (needs Pillow)
 npm run dev
 ```
 

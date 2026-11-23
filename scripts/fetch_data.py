@@ -164,24 +164,34 @@ def simulate(series: dict) -> dict:
     soy = dict(series["soyoil"]["data"])
     maize = dict(series["maize"]["data"])
     months = sorted(set(diesel) & set(soy) & set(maize))
-    hvo, saf, eth = [], [], []
-    noise_h = noise_s = noise_e = 0.0
+    rape = dict(series["rapeoil"]["data"])
+    palm = dict(series["palm"]["data"])
+    hvo, saf, eth, fame, uco = [], [], [], [], []
+    noise_h = noise_s = noise_e = noise_f = noise_u = 0.0
     for i, m in enumerate(months):
         noise_h = 0.8 * noise_h + rnd.gauss(0, 45)
         noise_s = 0.8 * noise_s + rnd.gauss(0, 70)
         noise_e = 0.8 * noise_e + rnd.gauss(0, 18)
+        noise_f = 0.8 * noise_f + rnd.gauss(0, 30)
+        noise_u = 0.8 * noise_u + rnd.gauss(0, 25)
         h = max(diesel[m] + 380, 1.08 * soy[m] + 520) + noise_h
         s = h + 520 + 120 * math.sin(i / 9) + noise_s
         e = 2.9 * maize[m] + 160 + noise_e
+        f = max(diesel[m] + 150, 1.02 * rape.get(m, soy[m]) + 190) + noise_f
+        u = 0.92 * palm.get(m, soy[m]) + 120 + noise_u
         hvo.append([m, round(h, 1)])
         saf.append([m, round(s, 1)])
         eth.append([m, round(e, 1)])
+        fame.append([m, round(f, 1)])
+        uco.append([m, round(u, 1)])
     common = dict(unit="$/t", status="example", source="Simulated (real prices: Argus, Platts — paywalled)",
                   sourceUrl="", updated="model")
     return {
         "hvo": dict(label="HVO / renewable diesel", data=hvo, **common),
         "saf": dict(label="SAF (HEFA)", data=saf, **common),
         "ethanol": dict(label="Ethanol", data=eth, **common),
+        "fame": dict(label="FAME / biodiesel (RME)", data=fame, **common),
+        "uco": dict(label="Used cooking oil (UCO)", data=uco, **common),
     }
 
 
