@@ -144,7 +144,7 @@ def main() -> None:
             series_ly.append([d.isoformat(), mean_ndvi(b2, cmap) if b2 else None])
             time.sleep(0.2)
 
-        lat, lon, place = FOCUS[rid]
+        lat, lon, place = FARMS[rid] if rid in FARMS else FOCUS[rid]
         orbit_box = (max(-80, bbox[0] - 12), max(-180, bbox[1] - 22), min(84, bbox[2] + 12), min(180, bbox[3] + 22))
         views = {}
         b = wms(GIBS, "MODIS_Terra_NDVI_8Day", orbit_box, 900, latest.isoformat(), "image/png")
@@ -184,5 +184,51 @@ def main() -> None:
     print("done")
 
 
+
+
+# ---------------------------------------------------------------- farm level (sub-metre)
+# Farm points: a single farm / plantation block inside each region.
+FARMS = {
+    "eu-rapeseed": (53.30, 13.95, "Farmland near Prenzlau, Uckermark"),
+    "ca-canola": (51.50, -107.90, "Section farms near Rosetown, SK"),
+    "au-canola": (-34.90, 147.30, "Cropping farms, Riverina NSW"),
+    "us-cornbelt": (42.12, -93.40, "Corn & soy fields, Story County IA"),
+    "br-matogrosso": (-12.45, -55.60, "Soy farms near Sorriso MT"),
+    "br-saopaulo": (-21.25, -48.05, "Sugarcane blocks, Ribeirão Preto SP"),
+    "ar-pampas": (-33.95, -60.50, "Soy fields near Pergamino"),
+    "id-palm": (0.45, 101.75, "Oil-palm plantation, Riau"),
+    "in-cane": (29.50, 77.65, "Sugarcane smallholdings, Muzaffarnagar"),
+    "cn-uco": (30.27, 120.16, "Hangzhou: restaurants = UCO collection"),
+}
+ESRI = "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/export"
+NAIP = "https://imagery.nationalmap.gov/arcgis/rest/services/USGSNAIPImagery/ImageServer/exportImage"
+
+
+def fetch_farms() -> None:
+    meta = json.loads((DATA / "imagery.json").read_text())
+    for rid, (lat, lon, place) in FARMS.items():
+        fb = box(lat, lon, 0.008)
+        la0, lo0, la1, lo1 = fb
+        us = rid == "us-cornbelt"
+        base = NAIP if us else ESRI
+        url = (f"{base}?bbox={lo0},{la0},{lo1},{la1}&bboxSR=4326&imageSR=4326&size=1100,{int(1100 * (la1 - la0) / (lo1 - lo0))}"
+               f"&format=jpg&f=image")
+        try:
+            b = get(url, 90)
+        except Exception as exc:  # noqa: BLE001
+            print("  farm fail", rid, exc)
+            continue
+        save(IMG / rid / "farm.jpg", b, quality=84)
+        src = "USDA NAIP aerial (~0.6 m), public domain" if us else "Esri World Imagery (sub-metre)"
+        meta["regions"][rid]["views"]["farm"] = {"src": f"/img/{rid}/farm.jpg", "bbox": fb, "label": f"Farm · {'NAIP 0.6 m' if us else 'aerial < 1 m'}"}
+        meta["regions"][rid]["farm"] = {"lat": lat, "lon": lon, "place": place, "source": src}
+        print("  farm", rid, len(b))
+    meta["sources"]["farm"] = "Esri World Imagery (Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community); USDA NAIP via USGS (public domain)"
+    (DATA / "imagery.json").write_text(json.dumps(meta))
+
+
 if __name__ == "__main__":
-    main()
+    import sys
+    if sys.argv[-1] != "--farms":
+        main()
+    fetch_farms()

@@ -5,10 +5,10 @@ import type { Region, RegionImagery, View } from '../lib/types'
 import { signed, yieldDeviation } from '../lib/model'
 import { Badge } from './Badge'
 
-const LEVELS = ['orbit', 'region', 'district', 'field'] as const
+const LEVELS = ['orbit', 'region', 'district', 'field', 'farm'] as const
 type Level = (typeof LEVELS)[number]
-const LEVEL_LABEL: Record<Level, string> = { orbit: 'Orbit', region: 'Region', district: 'District', field: 'Field' }
-const SCALE: Record<Level, string> = { orbit: '~2,000 km', region: '~800 km', district: '~60 km', field: '~12 km' }
+const LEVEL_LABEL: Record<Level, string> = { orbit: 'Orbit', region: 'Region', district: 'District', field: 'Field', farm: 'Farm' }
+const SCALE: Record<Level, string> = { orbit: '~2,000 km', region: '~800 km', district: '~60 km', field: '~12 km', farm: '~2 km' }
 
 const fmtLat = (v: number) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'N' : 'S'}`
 const fmtLon = (v: number) => `${Math.abs(v).toFixed(2)}°${v >= 0 ? 'E' : 'W'}`
@@ -106,7 +106,7 @@ export function SatPanel({ region, img, index }: { region: Region; img: RegionIm
       <div className="viewer">
         {view && (
           <div key={view.src + level} className="viewer-img">
-            <img src={view.src} alt={view.label} className={level === 'district' || level === 'field' ? 's2' : ''} />
+            <img src={view.src} alt={view.label} className={level === 'district' || level === 'field' ? 's2' : level === 'farm' ? 'farm' : ''} />
             {level === 'district' && overlay && views.districtNdvi && (
               <img src={views.districtNdvi.src} alt="NDVI overlay" className="overlay" />
             )}
@@ -124,7 +124,7 @@ export function SatPanel({ region, img, index }: { region: Region; img: RegionIm
           </>
         )}
         <div className="hud tl">{view?.label}</div>
-        <div className="hud tr">{level === 'region' && frames[frame] ? frames[frame].date : level === 'district' || level === 'field' ? '2023 mosaic' : frames.at(-1)?.date}</div>
+        <div className="hud tr">{level === 'region' && frames[frame] ? frames[frame].date : level === 'district' || level === 'field' ? '2023 mosaic' : level === 'farm' ? 'aerial basemap' : frames.at(-1)?.date}</div>
         <div className="hud bl">{focus ? `${fmtLat(focus.lat)}  ${fmtLon(focus.lon)}` : ''}<br />{focus?.place}</div>
         <div className="hud br">▭ {SCALE[level]}</div>
         <div className="brackets"><i /><i /><i /><i /></div>
@@ -145,8 +145,8 @@ export function SatPanel({ region, img, index }: { region: Region; img: RegionIm
             Overlay MODIS NDVI (250 m) on Sentinel-2 (10 m)
           </label>
         )}
-        {(level === 'orbit' || level === 'field') && (
-          <span className="small muted">{level === 'orbit' ? 'Green = dense vegetation. Box shows the region window.' : 'Individual fields, roads and plantation blocks at 10 m.'}</span>
+        {(level === 'orbit' || level === 'field' || level === 'farm') && (
+          <span className="small muted">{level === 'orbit' ? 'Green = dense vegetation. Box shows the region window.' : level === 'field' ? 'Individual fields, roads and plantation blocks at 10 m.' : `${img?.farm?.place ?? ''} — single rows, trees and machinery tracks.`}</span>
         )}
       </div>
 
@@ -175,7 +175,7 @@ export function SatPanel({ region, img, index }: { region: Region; img: RegionIm
 
       {img && <NdviCurve img={img} frame={frames[frame]?.date} />}
       <div className="src-line">
-        <Badge status="real" /> <span className="muted small">MODIS NDVI via NASA GIBS · Sentinel-2 cloudless 2023 by EOX (CC BY-NC-SA 4.0) · weather ERA5 via Open-Meteo</span>
+        <Badge status="real" /> <span className="muted small">MODIS NDVI via NASA GIBS · Sentinel-2 cloudless 2023 by EOX (CC BY-NC-SA 4.0) · farm: Esri World Imagery / USDA NAIP · weather ERA5 via Open-Meteo</span>
       </div>
     </div>
   )

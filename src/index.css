@@ -427,7 +427,7 @@ input[type='range']::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .sat { display: flex; flex-direction: column; }
 .sat-title { padding: 12px 12px 10px; }
 .sat-name { font-size: 26px; letter-spacing: -0.03em; line-height: 1.02; }
-.zoom-tabs { display: grid; grid-template-columns: repeat(4, 1fr) auto; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.zoom-tabs { display: grid; grid-template-columns: repeat(5, 1fr) auto; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .zoom-tabs button { background: none; border: 0; border-right: 1px solid var(--line); padding: 7px 4px; font-size: 11px; cursor: pointer; color: var(--muted); }
 .zoom-tabs button.active { color: var(--ink); box-shadow: inset 0 -2px 0 var(--accent); }
 .zoom-tabs button:disabled { opacity: 0.3; cursor: default; }
@@ -497,3 +497,5 @@ input[type='range']::-moz-range-thumb { width: 16px; height: 16px; border-radius
 .alert i { width: 6px; height: 6px; border-radius: 50%; margin-top: 5px; background: var(--down); animation: blink 1.6s ease-in-out infinite; }
 .alert i.pos { background: var(--up); animation: none; }
 @keyframes blink { 50% { opacity: 0.25; } }
+
+.viewer-img img.farm { filter: contrast(1.05) saturate(1.1); }

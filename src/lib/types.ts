@@ -67,7 +67,8 @@ export interface RegionImagery {
   frames: Frame[]
   ndvi: [string, number | null][]
   ndviLastYear: [string, number | null][]
-  views: Partial<Record<'orbit' | 'region' | 'district' | 'districtNdvi' | 'field', View>>
+  views: Partial<Record<'orbit' | 'region' | 'district' | 'districtNdvi' | 'field' | 'farm', View>>
+  farm?: { lat: number; lon: number; place: string; source: string }
 }
 
 export interface ImageryFile {
@@ -75,7 +76,7 @@ export interface ImageryFile {
   dates: string[]
   world: Frame[]
   regions: Record<string, RegionImagery>
-  sources: { modis: string; s2: string }
+  sources: { modis: string; s2: string; farm?: string }
 }
 
 export interface RegionFile {

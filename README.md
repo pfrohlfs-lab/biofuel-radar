@@ -8,7 +8,7 @@ A single-page dashboard that follows the chain *field → harvest → feedstock 
 - **Markets watchlist** — fuels (HVO, SAF, FAME, ethanol, diesel, Brent) and feedstocks (palm, soybean, rapeseed oil, UCO, corn, sugar), plus a regions tab and live satellite alerts.
 - **Instrument view** — price chart vs. diesel, 3M/1Y change, 12M range, volatility, linked supply regions.
 - **Global vegetation map** — 12 monthly MODIS NDVI frames as a time-lapse, supply regions highlighted for the selected product.
-- **Satellite intelligence** — zoom from orbit → region → district → single field (MODIS 250 m to Sentinel-2 10 m), 'fly in' animation, NDVI time-lapse, NDVI/Sentinel overlay, mean NDVI vs. last year decoded from the satellite frames, weather anomalies and a yield signal.
+- **Satellite intelligence** — zoom from orbit → region → district → field → single farm (MODIS 250 m → Sentinel-2 10 m → sub-metre aerial), 'fly in' animation, NDVI time-lapse, NDVI/Sentinel overlay, mean NDVI vs. last year decoded from the satellite frames, weather anomalies and a yield signal.
 - **Analysis tabs** — signal & credibility (scenario chain, value of a trusted signal), spreads, policy & demand (11 mandates), data & method.
 
 ## Data
@@ -16,6 +16,7 @@ A single-page dashboard that follows the chain *field → harvest → feedstock 
 |---|---|---|
 | Vegetation (NDVI) | NASA GIBS, MODIS Terra 8-day | real |
 | Field imagery | Sentinel-2 cloudless 2023 by EOX (CC BY-NC-SA 4.0) | real |
+| Farm imagery | Esri World Imagery (non-commercial demo use, attribution) · USDA NAIP (public domain) | real |
 | Weather | Open-Meteo historical API (ERA5) | real |
 | Feedstock & crude prices | World Bank Pink Sheet (monthly) | real |
 | Diesel | U.S. EIA, NY Harbor ULSD (monthly) | real |
