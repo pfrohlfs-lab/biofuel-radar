@@ -84,3 +84,30 @@ export interface RegionFile {
   weatherEnd: string
   regions: Region[]
 }
+
+export interface RegionForecast {
+  days: string[]
+  precip: number[]
+  precipNormal: number[]
+  temp: (number | null)[]
+  tempNormal: number[]
+  precipAnomalyPct: number
+  tempAnomaly: number
+}
+
+export interface Chokepoint {
+  last: string
+  transits30d: number | null
+  transitsLY: number | null
+  tankers30d: number | null
+  tankersLY: number | null
+  weekly: [string, number, number][]
+}
+
+export interface DriversFile {
+  generated: string
+  forecast: Record<string, RegionForecast>
+  enso: { series: [string, number][]; source: string; url: string }
+  shipping: { chokepoints: Record<string, Chokepoint>; source: string; url: string }
+  fx: { perUSD: Record<string, [string, number][]>; source: string; url: string }
+}

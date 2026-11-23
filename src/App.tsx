@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import type { ImageryFile, PriceFile, RegionFile } from './lib/types'
+import type { DriversFile, ImageryFile, PriceFile, RegionFile } from './lib/types'
+import { DriverMatrix } from './components/DriverMatrix'
+import { Macro } from './components/Macro'
+import { buildFactors } from './lib/drivers'
 import { Watchlist } from './components/Watchlist'
 import type { Tab } from './components/Watchlist'
 import { InstrumentView } from './components/InstrumentView'
@@ -24,23 +27,25 @@ function Toggle({ label, value, onChange, a = 'On', b = 'Off', className = '' }:
   )
 }
 
-const BOTTOM = ['Signal & credibility', 'Spreads', 'Policy & demand', 'Data & method'] as const
+const BOTTOM = ['Shipping, FX & trade', 'Signal & credibility', 'Spreads', 'Policy & demand', 'Data & method'] as const
 
 export default function App() {
   const [prices, setPrices] = useState<PriceFile | null>(null)
   const [regionFile, setRegionFile] = useState<RegionFile | null>(null)
   const [imagery, setImagery] = useState<ImageryFile | null>(null)
+  const [drivers, setDrivers] = useState<DriversFile | null>(null)
   const [grid, setGrid] = useState(false)
   const [dark, setDark] = useState(true)
   const [tab, setTab] = useState<Tab>('feedstocks')
   const [instKey, setInstKey] = useState('palm')
   const [regionId, setRegionId] = useState('id-palm')
-  const [bottom, setBottom] = useState<(typeof BOTTOM)[number]>('Signal & credibility')
+  const [bottom, setBottom] = useState<(typeof BOTTOM)[number]>('Shipping, FX & trade')
   const [clock, setClock] = useState(() => new Date())
 
   useEffect(() => {
     fetch('/data/prices.json').then((r) => r.json()).then(setPrices)
     fetch('/data/regions.json').then((r) => r.json()).then(setRegionFile)
+    fetch('/data/drivers.json').then((r) => (r.ok ? r.json() : null)).then(setDrivers).catch(() => setDrivers(null))
     fetch('/data/imagery.json').then((r) => (r.ok ? r.json() : null)).then(setImagery).catch(() => setImagery(null))
     const t = setInterval(() => setClock(new Date()), 1000)
     return () => clearInterval(t)
@@ -67,6 +72,8 @@ export default function App() {
       if (feed) setInstKey(feed.key)
     }
   }
+
+  const factors = useMemo(() => (prices && regionFile ? buildFactors(inst, regionFile.regions, prices, imagery, drivers) : []), [inst, prices, regionFile, imagery, drivers])
 
   const ticker = useMemo(() => {
     if (!prices) return []
@@ -137,12 +144,13 @@ export default function App() {
           </aside>
           <div className="t-center">
             <InstrumentView inst={inst} prices={prices} regions={regions} selectedRegion={regionId} onRegion={selectRegion} />
+            <DriverMatrix factors={factors} onRegion={selectRegion} />
             {imagery && imagery.world.length > 0 && (
               <SupplyMap frames={imagery.world} regions={regions} linked={inst.regions} selected={regionId} onSelect={selectRegion} />
             )}
           </div>
           <aside className="t-right">
-            {region && <SatPanel region={region} img={imagery?.regions[region.id]} index={regionIdx} />}
+            {region && <SatPanel region={region} img={imagery?.regions[region.id]} index={regionIdx} forecast={drivers?.forecast[region.id]} />}
           </aside>
         </section>
 
@@ -155,6 +163,7 @@ export default function App() {
             ))}
           </div>
           <div className="analysis-body">
+            {bottom === 'Shipping, FX & trade' && drivers && <Macro drivers={drivers} />}
             {bottom === 'Signal & credibility' && <Signal regions={regions} prices={prices} />}
             {bottom === 'Spreads' && <Prices prices={prices} />}
             {bottom === 'Policy & demand' && <Policy />}
@@ -192,6 +201,11 @@ function DataMethod({ prices, imagery, weatherEnd }: { prices: PriceFile; imager
             <tr><td>Vegetation (NDVI)</td><td><a href="https://gibs.earthdata.nasa.gov/" target="_blank" rel="noreferrer">NASA GIBS · MODIS Terra NDVI 8-day</a></td><td>~250 m · to {imagery?.dates.at(-1) ?? '—'}</td><td><Badge status="real" /></td></tr>
             <tr><td>Field imagery</td><td><a href="https://s2maps.eu" target="_blank" rel="noreferrer">Sentinel-2 cloudless 2023 by EOX</a> (CC BY-NC-SA 4.0)</td><td>10 m · annual mosaic</td><td><Badge status="real" /></td></tr>
             <tr><td>Mean NDVI per frame</td><td>Decoded from GIBS colour map MODIS_NDVI v1.3</td><td>12 monthly frames + year before</td><td><Badge status="real" /></td></tr>
+            <tr><td>Weather forecast</td><td><a href="https://open-meteo.com/en/docs" target="_blank" rel="noreferrer">Open-Meteo forecast API</a></td><td>16 days, daily</td><td><Badge status="real" /></td></tr>
+            <tr><td>Shipping</td><td><a href="https://portwatch.imf.org/" target="_blank" rel="noreferrer">IMF PortWatch chokepoints</a></td><td>daily transits</td><td><Badge status="real" /></td></tr>
+            <tr><td>ENSO</td><td><a href="https://www.cpc.ncep.noaa.gov/data/indices/oni.ascii.txt" target="_blank" rel="noreferrer">NOAA CPC ONI</a></td><td>3-month seasons</td><td><Badge status="real" /></td></tr>
+            <tr><td>FX</td><td><a href="https://frankfurter.dev/" target="_blank" rel="noreferrer">ECB reference rates (Frankfurter)</a></td><td>daily</td><td><Badge status="real" /></td></tr>
+            <tr><td>Trade policy</td><td>Curated tariffs, levies, export taxes</td><td>event-based</td><td><Badge status="check" /></td></tr>
             <tr><td>Weather</td><td><a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noreferrer">Open-Meteo historical API (ERA5)</a></td><td>daily · to {weatherEnd}</td><td><Badge status="real" /></td></tr>
             <tr><td>Feedstock & crude prices</td><td><a href="https://www.worldbank.org/en/research/commodity-markets" target="_blank" rel="noreferrer">World Bank Pink Sheet</a></td><td>monthly · {prices.series.palm.updated}</td><td><Badge status="real" /></td></tr>
             <tr><td>Diesel</td><td><a href="https://www.eia.gov/dnav/pet/hist/LeafHandler.ashx?n=PET&s=EER_EPD2DXL0_PF4_Y35NY_DPG&f=M" target="_blank" rel="noreferrer">U.S. EIA · NY Harbor ULSD</a></td><td>monthly · $/gal → $/t</td><td><Badge status="real" /></td></tr>

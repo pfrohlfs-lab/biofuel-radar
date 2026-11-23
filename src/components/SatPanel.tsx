@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { scaleLinear, scalePoint } from 'd3-scale'
 import { line } from 'd3-shape'
-import type { Region, RegionImagery, View } from '../lib/types'
+import type { Region, RegionForecast, RegionImagery, View } from '../lib/types'
 import { signed, yieldDeviation } from '../lib/model'
 import { Badge } from './Badge'
 
@@ -25,7 +25,7 @@ function inner(outer: View['bbox'], innerBox: View['bbox']) {
   }
 }
 
-export function SatPanel({ region, img, index }: { region: Region; img: RegionImagery | undefined; index: number }) {
+export function SatPanel({ region, img, index, forecast }: { region: Region; img: RegionImagery | undefined; index: number; forecast?: RegionForecast }) {
   const [level, setLevel] = useState<Level>('region')
   const [overlay, setOverlay] = useState(false)
   const [auto, setAuto] = useState(false)
@@ -174,6 +174,7 @@ export function SatPanel({ region, img, index }: { region: Region; img: RegionIm
       </div>
 
       {img && <NdviCurve img={img} frame={frames[frame]?.date} />}
+      {forecast && <ForecastBars f={forecast} />}
       <div className="src-line">
         <Badge status="real" /> <span className="muted small">MODIS NDVI via NASA GIBS · Sentinel-2 cloudless 2023 by EOX (CC BY-NC-SA 4.0) · farm: Esri World Imagery / USDA NAIP · weather ERA5 via Open-Meteo</span>
       </div>
@@ -212,6 +213,40 @@ function NdviCurve({ img, frame }: { img: RegionImagery; frame?: string }) {
         <path d={gen(img.ndvi) ?? ''} fill="none" stroke="var(--up)" strokeWidth={1.6} />
         {frame && <line x1={x(frame)} x2={x(frame)} y1={m.t} y2={H - m.b} stroke="var(--accent)" />}
       </svg>
+    </div>
+  )
+}
+
+function ForecastBars({ f }: { f: RegionForecast }) {
+  const W = 400
+  const H = 110
+  const m = { t: 8, r: 8, b: 18, l: 28 }
+  const hi = Math.max(...f.precip, ...f.precipNormal, 2)
+  const y = scaleLinear().domain([0, hi * 1.1]).range([H - m.b, m.t])
+  const bw = (W - m.l - m.r) / f.days.length
+  const normal = line<number>().x((_, i) => m.l + i * bw + bw / 2).y((v) => y(v))(f.precipNormal) ?? ''
+  return (
+    <div style={{ marginTop: 10, padding: '0 12px' }}>
+      <div className="small" style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+        <span>Rain forecast, next 16 days</span>
+        <span className={`num ${f.precipAnomalyPct < -40 ? 'down' : 'muted'}`}>{signed(f.precipAnomalyPct, 0, '%')} vs. normal · {signed(f.tempAnomaly, 1, '°')}</span>
+      </div>
+      <svg className="chart" viewBox={`0 0 ${W} ${H}`}>
+        {y.ticks(3).map((t) => (
+          <g key={t}>
+            <line className="gridline" x1={m.l} x2={W - m.r} y1={y(t)} y2={y(t)} />
+            <text x={m.l - 4} y={y(t) + 3} textAnchor="end">{t}</text>
+          </g>
+        ))}
+        {f.precip.map((v, i) => (
+          <rect key={i} x={m.l + i * bw + 2} width={bw - 4} y={y(v)} height={H - m.b - y(v)} fill={v < f.precipNormal[i] * 0.5 ? 'var(--down)' : 'var(--ink)'} opacity={0.8} />
+        ))}
+        <path d={normal} fill="none" stroke="var(--muted)" strokeDasharray="3 3" />
+        {f.days.map((d, i) => i % 3 === 0 && (
+          <text key={d} x={m.l + i * bw + bw / 2} y={H - 4} textAnchor="middle">{d.slice(5)}</text>
+        ))}
+      </svg>
+      <div className="small muted">mm/day · dashed: 2016–2025 normal · Open-Meteo forecast</div>
     </div>
   )
 }
