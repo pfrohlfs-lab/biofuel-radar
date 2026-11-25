@@ -14,6 +14,7 @@ import { Signal } from './components/Signal'
 import { Badge } from './components/Badge'
 import { INSTRUMENTS } from './data/instruments'
 import { fmt } from './lib/model'
+import { loadJson } from './lib/asset'
 
 function Toggle({ label, value, onChange, a = 'On', b = 'Off', className = '' }: { label: string; value: boolean; onChange: (v: boolean) => void; a?: string; b?: string; className?: string }) {
   return (
@@ -43,10 +44,10 @@ export default function App() {
   const [clock, setClock] = useState(() => new Date())
 
   useEffect(() => {
-    fetch('/data/prices.json').then((r) => r.json()).then(setPrices)
-    fetch('/data/regions.json').then((r) => r.json()).then(setRegionFile)
-    fetch('/data/drivers.json').then((r) => (r.ok ? r.json() : null)).then(setDrivers).catch(() => setDrivers(null))
-    fetch('/data/imagery.json').then((r) => (r.ok ? r.json() : null)).then(setImagery).catch(() => setImagery(null))
+    loadJson<PriceFile>('data/prices.json').then(setPrices)
+    loadJson<RegionFile>('data/regions.json').then(setRegionFile)
+    loadJson<DriversFile>('data/drivers.json').then(setDrivers).catch(() => setDrivers(null))
+    loadJson<ImageryFile>('data/imagery.json').then(setImagery).catch(() => setImagery(null))
     const t = setInterval(() => setClock(new Date()), 1000)
     return () => clearInterval(t)
   }, [])
